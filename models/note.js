@@ -7,7 +7,7 @@ const noteSchema = new mongoose.Schema ({
   },
   content: String
 }); 
-
+//Adds createdAt and updatedAt fields and also updates those each times doc inserted or created
 noteSchema.set('timestamps', true);
 
 const Note = mongoose.model('Note', noteSchema);

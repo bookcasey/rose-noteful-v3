@@ -35,81 +35,81 @@ mongoose.connect(MONGODB_URI)
   });
 
 // //Find note by id using Note.findById
-// mongoose.connect(MONGODB_URI)
-//   .then(() => {
-//     const searchId = '000000000000000000000003';
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    const searchId = '000000000000000000000003';
 
-//     return Note.findById(searchId);
-//   })
-//   .then(results => {
-//     console.log(results);
-//   })
-//   .then(() => {
-//     return mongoose.disconnect();
-//   })
-//   .catch(err => {
-//     console.error(`ERROR: ${err.message}`);
-//     console.error(err);
-//   });
+    return Note.findById(searchId);
+  })
+  .then(results => {
+    console.log(results);
+  })
+  .then(() => {
+    return mongoose.disconnect();
+  })
+  .catch(err => {
+    console.error(`ERROR: ${err.message}`);
+    console.error(err);
+  });
 
 //Create a new note using Note.create
-// mongoose.connect(MONGODB_URI)
-//   .then(() => {
-//     const newItem = {
-//       title: 'new item',
-//       content: 'new content'
-//     };
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    const newItem = {
+      title: 'new item',
+      content: 'new content'
+    };
 
-//     return Note.create(newItem);
-//   })
-//   .then(results => {
-//     console.log(results);
-//   })
-//   .then(() => {
-//     return mongoose.disconnect();
-//   })
-//   .catch(err => {
-//     console.error(`ERROR: ${err.message}`);
-//     console.error(err);
-//   });
+    return Note.create(newItem);
+  })
+  .then(results => {
+    console.log(results);
+  })
+  .then(() => {
+    return mongoose.disconnect();
+  })
+  .catch(err => {
+    console.error(`ERROR: ${err.message}`);
+    console.error(err);
+  });
 
 //Update a note by id using Note.findByIdAndUpdate
-// mongoose.connect(MONGODB_URI)
-//   .then(() => {
-//     const idUpdate = '5b73299d6bf68dc852d73799';
-//     const updateItem = {
-//       title: 'updated item',
-//       content: 'updated content',
-//       new: true
-//     };
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    const idUpdate = '5b73299d6bf68dc852d73799';
+    const updateItem = {
+      title: 'updated item',
+      content: 'updated content',
+      new: true
+    };
 
-//     return Note.findByIdAndUpdate(idUpdate, updateItem);
-//   })
-//   .then(results => {
-//     console.log(results);
-//   })
-//   .then(() => {
-//     return mongoose.disconnect();
-//   })
-//   .catch(err => {
-//     console.error(`ERROR: ${err.message}`);
-//     console.error(err);
-//   });
+    return Note.findByIdAndUpdate(idUpdate, updateItem);
+  })
+  .then(results => {
+    console.log(results);
+  })
+  .then(() => {
+    return mongoose.disconnect();
+  })
+  .catch(err => {
+    console.error(`ERROR: ${err.message}`);
+    console.error(err);
+  });
 
 //Delete a note by id using Note.findByIdAndRemove
-// mongoose.connect(MONGODB_URI)
-//   .then(() => {
-//     const idRemove = '5b73299d6bf68dc852d73799';
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    const idRemove = '5b73299d6bf68dc852d73799';
   
-//     return Note.findByIdAndRemove(idRemove);
-//   })
-//   .then(results => {
-//     console.log(results);
-//   })
-//   .then(() => {
-//     return mongoose.disconnect();
-//   })
-//   .catch(err => {
-//     console.error(`ERROR: ${err.message}`);
-//     console.error(err);
-//   });
+    return Note.findByIdAndRemove(idRemove);
+  })
+  .then(results => {
+    console.log(results);
+  })
+  .then(() => {
+    return mongoose.disconnect();
+  })
+  .catch(err => {
+    console.error(`ERROR: ${err.message}`);
+    console.error(err);
+  });

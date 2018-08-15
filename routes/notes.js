@@ -4,12 +4,17 @@ const express = require('express');
 
 const router = express.Router();
 
-// const mongoose = require('mongoose');
+// const mongoose = require('mongoose'); don't need because line 9 references Note model
 
 const Note = require('../models/note');
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
+  //why query and not params? 
+  //localhost:8080/api/notes endpoint 
+  //to use query object need an endpoint like this: localhost:8080/api/notes?searchTerm=cats&&page=1
+  //everything after ? is the query string
+  //req.query = {searchTerm: cats}  is an object inside express 
   const searchTerm = req.query.searchTerm; 
   let filter = {};
   const filterArray = [];
@@ -19,7 +24,7 @@ router.get('/', (req, res, next) => {
     const content = { 'content': {$regex: searchTerm, $options: 'i' }};
     filterArray.push(title);
     filterArray.push(content);
-    filter.$or = filterArray; 
+    filter.$or = filterArray; //if searchTerm is in title or the content field = true  
   }
   
   Note
@@ -42,6 +47,9 @@ router.get('/', (req, res, next) => {
 
 
 /* ========== GET/READ A SINGLE ITEM ========== */
+//path params. paramater inside the path, need : 
+//localhost:8080/api/notes/63278
+//req.params = {id: 63278}
 router.get('/:id', (req, res, next) => {
   const id = req.params.id;
   Note
@@ -88,6 +96,7 @@ router.put('/:id', (req, res, next) => {
     
   const updateItem = {};
 
+  //Review documentation
   Object.keys(req.body).forEach(key => updateItem[key] = req.body[key]);
 
   Note
