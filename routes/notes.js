@@ -78,8 +78,14 @@ router.post('/', (req, res, next) => {
     
   Note
     .create(newItem)
-    .then(results => {
-      res.json(results);
+    .then(result => {
+      if(result) {
+        res.location(`http://${req.originalUrl}/${result.id}`)
+          .status(201)
+          .json(result); 
+      } else {
+        next();
+      }
     })
     .catch(err => {
       next(err);
@@ -115,11 +121,11 @@ router.put('/:id', (req, res, next) => {
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
-  const idRemove = '5b73299d6bf68dc852d73799';
+
   Note
-    .findByIdAndRemove(idRemove)
-    .then(results => {
-      res.json(results);
+    .findByIdAndRemove(req.params.id)
+    .then(() => {
+      res.sendStatus(204);
     })
     .catch(err => {
       next(err);
