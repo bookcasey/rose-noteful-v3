@@ -1,3 +1,10 @@
 language: node_js
 node_js: node
 services: mongodb
+deploy:
+  provider: heroku
+  api_key:
+    secure: Fly2BDZYd4iIBB8DBxdAWJ+HszuU1S4Bn+ZPxCwlkaRo8qM8N+XsOWpl5JaSkiIF0Y5HkYrgPDG0nYWJL31fWV0OtW7hh6gL9PVnJqoq2Giu8zLqy1kVRRxcfoONBKtsS9Ykfsl6gGZd1DboADezpCsAa7BSdG08yBqGJyoWoj0dxgnBLh/TRFJEDM6C4cCxYwqv9dm0RcrEcCN1hEOwkOVlJqOvLmFE3hyTp2BsCVnaWXTfHXbliw3u3CclUlCTqFeDLVsGpDOsORq8lzqDfoDEeDe/hDdAINIJVexwqhwkO7iObQloR9NiJYRl2T7Uc2gMVE4Ckvd3rXkydS/gV4PcDSTMoaEh4jfansy6Pqu75QI1SzNarOoWcy5EZgLhRRFIKVdBWV69EkdahlfEBxByUcBwiA1jMAlgb//nyKOQVVzYy5ml3WHJ5l9V4VN6H8CfW4diGJFh4WcwPCFE16/Fynyj31exV3oBTUI0onkkI4Bo2d5XIZHTejU+i+ax0esP94M/T+faD7Ur0jDf7NcyZDnYbGcyh29uKArCI3oCEQoyERD0GVS+ankm+2osWSj7wpUtusj+lxMhppTyJAl9RbaXNDWANAQ3mDQvulXCWRbUP31e/v+inoS9OirhfRFR5QI1/RAF/8jL8w+rMerJykhkr2sM1QnZNJxZ5KA=
+  app: rose-node-noteful-v3
+  on:
+    repo: thinkful-ei23/rose-noteful-v3
