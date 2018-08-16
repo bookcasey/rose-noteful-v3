@@ -70,8 +70,8 @@ describe('Noteful API resource', function() {
           expect(resNote.id).to.equal(note.id);
           expect(resNote.title).to.equal(note.title);
           expect(resNote.content).to.equal(note.content);
-          // expect(new Date(resNote.createdAt)).to.equal(note.createdAt);
-          // expect(new Date(resNote.updatedAt)).to.equal(note.updatedAt);
+          expect(new Date(resNote.createdAt)).to.eql(note.createdAt);
+          expect(new Date(resNote.updatedAt)).to.eql(note.updatedAt);
           
         });
     });
@@ -195,32 +195,35 @@ describe('Noteful API resource', function() {
         title: 'updated title',
         content: 'updated content'
       };
+
+      let res;
       return Note
         .findOne()
         .then(function(note) {
           updateData.id = note.id;
-          updateData.createdAt = note.createdAt;
-          updateData.updatedAt = note.updatedAt;
 
           return chai.request(app)
             .put(`/api/notes/${note.id}`)
             .send(updateData);
         })
-        .then(function(res) {
+        .then(function(_res) {
+          res = _res;
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
           expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(res.body.id).to.equal(updateData.id);
+          expect(res.body.title).to.equal(updateData.title);
+          expect(res.body.content).to.equal(updateData.content);
 
-          updateData.updatedAt = res.body.updatedAt;
-
-          return Note.findById(updateData.id);
+          return Note.findById(res.body.id);
         })
         .then(function(note) {
-          expect(note.title).to.eql(updateData.title);
-          expect(note.content).to.eql(updateData.content);
-          // expect(new Date(note.body.createdAt)).to.eql(updateData.createdAt);
-          // expect(new Date(note.body.updatedAt)).to.eql(updateData.updatedAt);
+          expect(note.id).to.equal(res.body.id);
+          expect(note.title).to.equal(res.body.title);
+          expect(note.content).to.equal(res.body.content);
+          expect(new Date(res.body.createdAt)).to.eql(note.createdAt); //eql vs equal
+          expect(new Date(res.body.updatedAt)).to.eql(note.updatedAt);
         });
     });
   });
