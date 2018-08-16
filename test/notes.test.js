@@ -219,10 +219,11 @@ describe('Noteful API resource', function() {
           return Note.findById(res.body.id);
         })
         .then(function(note) {
+          console.log(note);
           expect(note.id).to.equal(res.body.id);
           expect(note.title).to.equal(res.body.title);
           expect(note.content).to.equal(res.body.content);
-          expect(new Date(res.body.createdAt)).to.eql(note.createdAt); //eql vs equal
+          expect(new Date(res.body.createdAt)).to.eql(note.createdAt); //eql (objects or arrays) vs equal (strings or numbers)
           expect(new Date(res.body.updatedAt)).to.eql(note.updatedAt);
         });
     });
