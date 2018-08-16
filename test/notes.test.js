@@ -219,7 +219,6 @@ describe('Noteful API resource', function() {
           return Note.findById(res.body.id);
         })
         .then(function(note) {
-          console.log(note);
           expect(note.id).to.equal(res.body.id);
           expect(note.title).to.equal(res.body.title);
           expect(note.content).to.equal(res.body.content);
