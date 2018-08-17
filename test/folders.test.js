@@ -3,6 +3,7 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const chaiSorted = require('chai-sorted');
+const chaiId = require('chaid');
 const mongoose = require('mongoose');
 
 const app = require('../server');
@@ -13,9 +14,10 @@ const Folder = require('../models/folder');
 const seedFolders = require('../db/seed/folders');
 
 const expect = chai.expect;
-chai.use(chaiHttp);
 
+chai.use(chaiHttp);
 chai.use(chaiSorted);
+chai.use(chaiId);
 
 describe('Noteful API resource', function() {
   before(function () {
@@ -95,7 +97,6 @@ describe('Noteful API resource', function() {
         .then((res) => {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
-
           expect(res.body).to.be.an('object');
           expect(res.body).to.have.keys('id', 'name', 'createdAt', 'updatedAt');
 
@@ -107,6 +108,14 @@ describe('Noteful API resource', function() {
           expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
         });
     });
+    // it('should confirm id is MongoObjectId', function() {
+    //   let id;
+    //   return Folder.id()
+    //     .then(_id => {
+    //       id = _id;
+    //       return chai.request(app).get('')
+    //     })
+    // })
   });
 
   describe('POST /api/folders', function () {

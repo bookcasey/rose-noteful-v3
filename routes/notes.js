@@ -1,12 +1,12 @@
 'use strict';
 
 const express = require('express');
+const mongoose = require('mongoose');
+// const ObjectId = require('mongoose').Types.ObjectId;
 
-const router = express.Router();
+const router = express.Router(); //creates router instance (mini-app)
 
-// const mongoose = require('mongoose'); don't need because line 9 references Note model
-
-const Note = require('../models/note');
+const Note = require('../models/note'); //does the order matter (b4 or after line 7)
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
@@ -15,23 +15,35 @@ router.get('/', (req, res, next) => {
   //to use query object need an endpoint like this: localhost:8080/api/notes?searchTerm=cats&&page=1
   //everything after ? is the query string
   //req.query = {searchTerm: cats}  is an object inside express 
-  const searchTerm = req.query.searchTerm; 
+  const { searchTerm, folderId } = req.query; 
+
   let filter = {};
-  const filterArray = [];
+  // const filterArray = [];
 
   if (searchTerm) {
-    const title = { 'title': {$regex: searchTerm, $options: 'i' }};
-    const content = { 'content': {$regex: searchTerm, $options: 'i' }};
-    filterArray.push(title);
-    filterArray.push(content);
-    filter.$or = filterArray; //if searchTerm is in title or the content field = true  
+    //searchTerm is in either title or content
+    const re = new RegExp(searchTerm, 'i');
+    filter.$or = [{ 'title': re }, { 'content': re }];
+    // const title = { 'title': {$regex: searchTerm, $options: 'i' }};
+    // const content = { 'content': {$regex: searchTerm, $options: 'i' }};
+    // filterArray.push(title);
+    // filterArray.push(content);
+    // filterArray.push(folderId);
+    // filter.$or = filterArray; //if searchTerm is in title or the content field = true  
   }
-  
+  if(folderId) {
+    filter.folderId = folderId;
+  }
+
   Note
     .find(filter)
     .sort({ updatedAt: 'desc' })
-    .then(notes => {
-      res.json(notes);
+    .then(results => {
+      if(results) {
+        res.json(results);
+      } else {
+        next(); //404 
+      }
     })
     .catch(err => {
       next(err);
@@ -52,10 +64,20 @@ router.get('/', (req, res, next) => {
 //req.params = {id: 63278}
 router.get('/:id', (req, res, next) => {
   const id = req.params.id;
+
+  if(!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The id is not valid');
+    err.status = 400;
+    return next(err);
+  }
   Note
     .findById(id)
-    .then(results => {
-      res.json(results);
+    .then(result => {
+      if(result) {
+        res.json(result);
+      } else {
+        next();
+      }
     })
     .catch(err => {
       next(err);
@@ -64,25 +86,77 @@ router.get('/:id', (req, res, next) => {
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
+  const { title, content, folderId } = req.body;
 
-  if (!('title' in req.body)) {
-    const message = 'Missing title in request body';
-    console.error(message);
-    return res.status(400).send(message);
+  if (!title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
   }
 
-  const newItem = {
-    title: req.body.title,
-    content: req.body.content
-  };
+  if (folderId) {
+    try { 
+      mongoose.Types.ObjectId.isValid(folderId);
+    } catch(err) {
+      return next(err);
+    }
+  }
+
+  const newNote = { title, content, folderId };
+  // const newItem = {
+  //   title: req.body.title,
+  //   content: req.body.content
+  // };
     
   Note
-    .create(newItem)
+    .create(newNote)
+    .then(result => {
+      res
+        .location(`http://${req.originalUrl}/${result.id}`)
+        .status(201)
+        .json(result); 
+    })
+    .catch(err => {
+      next(err);
+    });
+});
+
+/* ========== PUT/UPDATE A SINGLE ITEM ========== */
+router.put('/:id', (req, res, next) => {
+  const { id } = req.params;
+  const { title, content, folderId } = req.body;  
+
+  //validate input
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The id is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
+  if (!title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
+  if (folderId) {
+    try {
+      mongoose.Types.ObjectId.isValid(folderId);
+    } catch(err) {
+      return next(err);
+    }
+  } 
+
+  const updateNote = { title, content, folderId };
+
+  //Original beautiful solution by Burke
+  //Object.keys(req.body).forEach(key => updateItem[key] = req.body[key]);
+
+  Note
+    .findByIdAndUpdate(id, updateNote, {new: true})
     .then(result => {
       if(result) {
-        res.location(`http://${req.originalUrl}/${result.id}`)
-          .status(201)
-          .json(result); 
+        res.json(result);
       } else {
         next();
       }
@@ -90,42 +164,23 @@ router.post('/', (req, res, next) => {
     .catch(err => {
       next(err);
     });
-    
-  // console.log('Create a Note');
-  // res.location('path/to/new/document').status(201).json({ id: 2, title: 'Temp 2' });
-
-});
-
-/* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', (req, res, next) => {
-  const id = req.params.id;
-    
-  const updateItem = {};
-
-  //Review documentation
-  Object.keys(req.body).forEach(key => updateItem[key] = req.body[key]);
-
-  Note
-    .findByIdAndUpdate(id, updateItem, {new: true})
-    .then(results => {
-      res.json(results);
-    })
-    .catch(err => {
-      next(err);
-    });
-
-  // console.log('Update a Note');
-  // res.json({ id: 1, title: 'Updated Temp 1' });
-
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
+  const { id } = req.params;
+
+  //validate input
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
 
   Note
-    .findByIdAndRemove(req.params.id)
+    .findByIdAndRemove(id)
     .then(() => {
-      res.sendStatus(204);
+      res.sendStatus(204).end(); //review .end() 
     })
     .catch(err => {
       next(err);
