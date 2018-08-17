@@ -7,10 +7,8 @@ const mongoose = require('mongoose');
 const app = require('../server');
 const { TEST_MONGODB_URI } = require('../config');
 
-const Note = require('../models/note');
 const Folder = require('../models/folder');
 
-const seedNotes = require('../db/seed/notes');
 const seedFolders = require('../db/seed/folders');
 
 const expect = chai.expect;
@@ -23,14 +21,7 @@ describe('Noteful API resource', function() {
   });
   
   beforeEach(function () {
-    return Promise.all([
-      Note.insertMany(seedNotes),
-      Folder.insertMany(seedFolders),
-    ])
-      .then(() => {
-        Note.createIndexes(); 
-        Folder.createIndexes();
-      }); 
+    return Folder.insertMany(seedFolders);
   });
   
   afterEach(function () {
@@ -41,72 +32,72 @@ describe('Noteful API resource', function() {
     return mongoose.disconnect();
   });
 
-  describe('GET /api/notes', function() {
-    it('should return all existing notes', function() {
+  describe('GET /api/folders', function() {
+    it('should return all existing folders', function() {
       let res;
       return chai.request(app)
-        .get('/api/notes')
+        .get('/api/folders')
         .then(function(_res) {
           res = _res; //make res available outside scope of this block
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.have.lengthOf.at.least(1);
-          return Note.countDocuments();
+          return Folder.countDocuments();
         })
         .then(function(count) {
           expect(res.body).to.have.lengthOf(count);
         });
     });
-    it('should return notes with right fields', function() {
-      let resNote;
+    it('should return folder with right fields', function() {
+      
+      let resFolder;
       return chai.request(app)
-        .get('/api/notes')
+        .get('/api/folders')
         .then(function(res) {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.an('array');
           expect(res.body).to.have.lengthOf.at.least(1);
 
-          res.body.forEach(function(note) {
-            expect(note).to.be.an('object');
-            expect(note).to.include.keys(
-              'id', 'title', 'content', 'createdAt', 'updatedAt'); //is 'folderId' required?   
+          res.body.forEach(function(folder) {
+            expect(folder).to.be.an('object');
+            expect(folder).to.include.keys(
+              'id', 'name', 'createdAt', 'updatedAt');    
           });
-          resNote = res.body[0];
-          return Note.findById(resNote.id);
+          resFolder = res.body[0];
+          return Folder.findById(resFolder.id);
         })
-        .then(function(note) {
-          expect(resNote.id).to.equal(note.id);
-          expect(resNote.title).to.equal(note.title);
-          expect(resNote.content).to.equal(note.content);
-          expect(resNote.folderId).to.equal(note.folderId + ''); 
-          expect(new Date(resNote.createdAt)).to.eql(note.createdAt);
-          expect(new Date(resNote.updatedAt)).to.eql(note.updatedAt);
+        .then(function(folder) {
+          expect(resFolder.id).to.equal(folder.id);
+          expect(resFolder.title).to.equal(folder.title);
+          expect(resFolder.content).to.equal(folder.content);
+          expect(new Date(resFolder.createdAt)).to.eql(folder.createdAt);
+          expect(new Date(resFolder.updatedAt)).to.eql(folder.updatedAt);
+          
         });
     });
   });
-
    
-  describe('GET /api/notes/:id', function () {
-    it('should return correct note', function () {
+  describe('GET /api/folders/:id', function () {
+    it('should return correct folder', function () {
       let data;
       // 1) First, call the database
-      return Note.findOne()
+      return Folder.findOne()
         .then(_data => {
           data = _data;
           // 2) then call the API with the ID
-          return chai.request(app).get(`/api/notes/${data.id}`);
+          return chai.request(app).get(`/api/folders/${data.id}`);
         })
         .then((res) => {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
 
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys('id', 'name', 'createdAt', 'updatedAt');
 
           // 3) then compare database results to API response
           expect(res.body.id).to.equal(data.id);
-          expect(res.body.title).to.equal(data.title);
+          expect(res.body.name).to.equal(data.name);
           expect(res.body.content).to.equal(data.content);
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
           expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
@@ -114,18 +105,16 @@ describe('Noteful API resource', function() {
     });
   });
 
-
-  describe('POST /api/notes', function () {
+  describe('POST /api/folders', function () {
     it('should create and return a new item when provided valid data', function () {
       const newItem = {
-        'title': 'The best article about cats ever!',
-        'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...'
+        'name': 'New Folder Name',
       };
 
       let res;
       // 1) First, call the API
       return chai.request(app)
-        .post('/api/notes')
+        .post('/api/folders')
         .send(newItem)
         .then(function (_res) {
           res = _res;
@@ -133,9 +122,9 @@ describe('Noteful API resource', function() {
           expect(res).to.have.header('location');
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys('id', 'name', 'createdAt', 'updatedAt');
           // 2) then call the database
-          return Note.findById(res.body.id);
+          return Folder.findById(res.body.id);
         })
         // 3) then compare the API response to the database results
         .then(data => {
@@ -148,21 +137,20 @@ describe('Noteful API resource', function() {
     });
   });
 
-  describe('PUT /api/notes/:id', function() {
-    it('should update note when passed valid data', function() {
+  describe('PUT /api/folders/:id', function() {
+    it('should update folder when passed valid data', function() {
       const updateData = {
-        title: 'updated title',
-        content: 'updated content'
+        name: 'updated name',
       };
 
       let res;
-      return Note
+      return Folder
         .findOne()
-        .then(function(note) {
-          updateData.id = note.id;
+        .then(function(folder) {
+          updateData.id = folder.id;
 
           return chai.request(app)
-            .put(`/api/notes/${note.id}`)
+            .put(`/api/folders/${folder.id}`)
             .send(updateData);
         })
         .then(function(_res) {
@@ -170,40 +158,37 @@ describe('Noteful API resource', function() {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys('id', 'name', 'createdAt', 'updatedAt');
           expect(res.body.id).to.equal(updateData.id);
-          expect(res.body.title).to.equal(updateData.title);
-          expect(res.body.content).to.equal(updateData.content);
-          expect(res.body.folderId).to.equal(updateData.folderId);
+          expect(res.body.name).to.equal(updateData.name);
 
-          return Note.findById(res.body.id);
+          return Folder.findById(res.body.id);
         })
-        .then(function(note) {
-          expect(note.id).to.equal(res.body.id);
-          expect(note.title).to.equal(res.body.title);
-          expect(note.content).to.equal(res.body.content);
-          expect(new Date(res.body.createdAt)).to.eql(note.createdAt); //eql (objects or arrays) vs equal (strings or numbers)
-          expect(new Date(res.body.updatedAt)).to.eql(note.updatedAt);
+        .then(function(folder) {
+          expect(folder.id).to.equal(res.body.id);
+          expect(folder.name).to.equal(res.body.name);
+          expect(new Date(res.body.createdAt)).to.eql(folder.createdAt); //eql (objects or arrays) vs equal (strings or numbers)
+          expect(new Date(res.body.updatedAt)).to.eql(folder.updatedAt);
         });
     });
   });
 
-  describe('DELETE /api/notes/:id', function() {
-    it('should delete a note by id', function() {
-      let note;
+  describe('DELETE /api/folder/:id', function() {
+    it('should delete a folder by id', function() {
+      let folder;
 
-      return Note
+      return Folder
         .findOne()
-        .then(function(_note) {
-          note = _note;
-          return chai.request(app).delete(`/api/notes/${note.id}`);
+        .then(function(_folder) {
+          folder = _folder;
+          return chai.request(app).delete(`/api/folders/${folder.id}`);
         })
         .then(function(res) {
           expect(res).to.have.status(204);
-          return Note.findById(note.id);
+          return Folder.findById(folder.id);
         })
-        .then(function(_note) {
-          expect(_note).to.be.null;
+        .then(function(_folder) {
+          expect(_folder).to.be.null;
         });
     });
   });

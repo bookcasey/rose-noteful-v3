@@ -1,13 +1,17 @@
 'use strict';
+
 const mongoose = require('mongoose');
+
+// const mongoose = require('mongoose'); don't need because line 9 references Note model
+
 
 const folderSchema = new mongoose.Schema({
   name: {type: String, required: true, unique: true}
 });
 
-// const folder = mongoose.model('Folder', folderSchema);
-
 folderSchema.set('timestamps', true);
+
+const Folder = mongoose.model('Folder', folderSchema);
 
 folderSchema.set('toObject', {
   virtuals: true,     // include built-in virtual `id`
@@ -17,4 +21,4 @@ folderSchema.set('toObject', {
   }
 });
 
-module.exports = mongoose.model('Folder', folderSchema);
+module.exports = Folder;
