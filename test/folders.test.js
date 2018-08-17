@@ -26,7 +26,10 @@ describe('Noteful API resource', function() {
   });
   
   beforeEach(function () {
-    return Folder.insertMany(seedFolders);
+    return Promise.all([ 
+      Folder.insertMany(seedFolders),
+      Folder.createIndexes()
+    ]);
   });
   
   afterEach(function () {
@@ -108,14 +111,6 @@ describe('Noteful API resource', function() {
           expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
         });
     });
-    // it('should confirm id is MongoObjectId', function() {
-    //   let id;
-    //   return Folder.id()
-    //     .then(_id => {
-    //       id = _id;
-    //       return chai.request(app).get('')
-    //     })
-    // })
   });
 
   describe('POST /api/folders', function () {

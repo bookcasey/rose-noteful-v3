@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 
 // const mongoose = require('mongoose'); don't need because line 9 references Note model
 
-
 const folderSchema = new mongoose.Schema({
   name: {type: String, required: true, unique: true}
 });

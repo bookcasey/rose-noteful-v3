@@ -2,9 +2,9 @@
 
 const express = require('express');
 const mongoose = require('mongoose');
-const Note = require('../models/note');
-const Folder = require('../models/folder');
 const router = express.Router();
+const Folder = require('../models/folder');
+const Note = require('../models/note');
 
 
 /* ========== GET/READ ALL ITEMS ========== */
@@ -19,7 +19,7 @@ router.get('/', (req, res, next) => {
     });
 });
 
-/* ========== GET/READ ALL ITEMS ========== */
+/* ========== GET/READ ONE ITEM BY ID ========== */
 router.get('/:id', (req, res, next) => {
   const {id} = req.params; 
   if(!mongoose.Types.ObjectId.isValid(id)) {

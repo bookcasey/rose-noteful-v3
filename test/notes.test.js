@@ -22,7 +22,7 @@ describe('Noteful API resource', function() {
       .then(() => mongoose.connection.db.dropDatabase());
   });
   
-  beforeEach(function () {
+  beforeEach(function () {  //is there a more terse solution?
     return Promise.all([
       Note.insertMany(seedNotes),
       Folder.insertMany(seedFolders),
@@ -31,7 +31,7 @@ describe('Noteful API resource', function() {
         Note.createIndexes(); 
         Folder.createIndexes();
       }); 
-  });
+  });    
   
   afterEach(function () {
     return mongoose.connection.db.dropDatabase();
@@ -43,21 +43,20 @@ describe('Noteful API resource', function() {
 
   describe('GET /api/notes', function() {
     it('should return all existing notes', function() {
-      let res;
-      return chai.request(app)
-        .get('/api/notes')
-        .then(function(_res) {
-          res = _res; //make res available outside scope of this block
-          expect(res).to.have.status(200);
-          expect(res).to.be.json;
-          expect(res.body).to.have.lengthOf.at.least(1);
-          return Note.countDocuments();
-        })
-        .then(function(count) {
-          expect(res.body).to.have.lengthOf(count);
-        });
+      //call the database and the API (Parallel Request)
+      return Promise.all([ //Wait for both promises to resolve using Promise.all
+        Note.find(),
+        chai.request(app).get('/api/notes')
+      ]).then(([data, res]) => {  //compare database results to API response
+        expect(res).to.have.status(200);
+        expect(res).to.be.json;
+        expect(res.body).to.be.an('array');
+        expect(res.body).to.have.length(data.length);
+      });
     });
-    it('should return notes with right fields', function() {
+
+    it('should return sorted notes with right fields', function() { 
+
       let resNote;
       return chai.request(app)
         .get('/api/notes')
@@ -70,7 +69,7 @@ describe('Noteful API resource', function() {
           res.body.forEach(function(note) {
             expect(note).to.be.an('object');
             expect(note).to.include.keys(
-              'id', 'title', 'content', 'createdAt', 'updatedAt'); //is 'folderId' required? no  
+              'id', 'title', 'content', 'createdAt', 'updatedAt'); 
           });
           resNote = res.body[0];
           return Note.findById(resNote.id);
@@ -82,11 +81,10 @@ describe('Noteful API resource', function() {
           expect(resNote.folderId).to.equal(note.folderId + ''); 
           expect(new Date(resNote.createdAt)).to.eql(note.createdAt);
           expect(new Date(resNote.updatedAt)).to.eql(note.updatedAt);
-        });
+        });  
     });
   });
 
-   
   describe('GET /api/notes/:id', function () {
     it('should return correct note', function () {
       let data;
@@ -115,12 +113,11 @@ describe('Noteful API resource', function() {
     });
   });
 
-
   describe('POST /api/notes', function () {
     it('should create and return a new item when provided valid data', function () {
       const newItem = {
         'title': 'The best article about cats ever!',
-        'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...'
+        'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...',
       };
 
       let res;
