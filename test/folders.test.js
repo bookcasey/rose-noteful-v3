@@ -2,6 +2,7 @@
 
 const chai = require('chai');
 const chaiHttp = require('chai-http');
+const chaiSorted = require('chai-sorted');
 const mongoose = require('mongoose');
 
 const app = require('../server');
@@ -13,6 +14,8 @@ const seedFolders = require('../db/seed/folders');
 
 const expect = chai.expect;
 chai.use(chaiHttp);
+
+chai.use(chaiSorted);
 
 describe('Noteful API resource', function() {
   before(function () {
@@ -33,7 +36,7 @@ describe('Noteful API resource', function() {
   });
 
   describe('GET /api/folders', function() {
-    it('should return all existing folders', function() {
+    it('should return all existing folders sorted by name', function() {
       let res;
       return chai.request(app)
         .get('/api/folders')
@@ -42,6 +45,7 @@ describe('Noteful API resource', function() {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.have.lengthOf.at.least(1);
+          expect(res.body).to.be.sortedBy('name');
           return Folder.countDocuments();
         })
         .then(function(count) {

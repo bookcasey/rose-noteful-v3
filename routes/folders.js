@@ -10,7 +10,7 @@ const router = express.Router();
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
   return Folder.find()
-    .sort('name')
+    .sort('name') 
     .then(results => {
       res.json(results);
     })

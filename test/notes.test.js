@@ -70,7 +70,7 @@ describe('Noteful API resource', function() {
           res.body.forEach(function(note) {
             expect(note).to.be.an('object');
             expect(note).to.include.keys(
-              'id', 'title', 'content', 'createdAt', 'updatedAt'); //is 'folderId' required?   
+              'id', 'title', 'content', 'createdAt', 'updatedAt'); //is 'folderId' required? no  
           });
           resNote = res.body[0];
           return Note.findById(resNote.id);
@@ -102,12 +102,13 @@ describe('Noteful API resource', function() {
           expect(res).to.be.json;
 
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt', 'folderId');
 
           // 3) then compare database results to API response
           expect(res.body.id).to.equal(data.id);
           expect(res.body.title).to.equal(data.title);
           expect(res.body.content).to.equal(data.content);
+          expect(res.body.folderId).to.equal(data.folderId + ''); 
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
           expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
         });
@@ -170,11 +171,10 @@ describe('Noteful API resource', function() {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt', 'folderId');
           expect(res.body.id).to.equal(updateData.id);
           expect(res.body.title).to.equal(updateData.title);
-          expect(res.body.content).to.equal(updateData.content);
-          expect(res.body.folderId).to.equal(updateData.folderId);
+          expect(res.body.content).to.equal(updateData.content); 
 
           return Note.findById(res.body.id);
         })
