@@ -3,11 +3,15 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const router = express.Router();
-const Tag = require('..models/tags');
+const Tag = require('../models/tags');
+const Note = require('../models/note'); 
+const Folder = require('../models/folder'); //do I need this here?
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
-  return Tag.find()
+
+  Tag
+    .find()
     .sort('name')
     .then(results => {
       res.json(results);
@@ -46,7 +50,7 @@ router.post('/', (req, res, next) => {
   }
 
   const newTag = {name};
-  
+
   Tag 
     .create(newTag)
     .then(result => {
@@ -66,3 +70,61 @@ router.post('/', (req, res, next) => {
       next(err);
     });
 });
+
+/* ========== PUT/UPDATE A SINGLE ITEM ========== */
+router.put('/:id', (req, res, next) => {
+  const { id } = req.params;
+  const { name } = req.body;
+
+  if(!name) {
+    const err = new Error('Missing name in request body');
+    err.status = 400;
+    return next(err);
+  }
+
+  if(!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The id entered is not a valid ID');
+    err.status = 400;
+    return next(err);
+  }
+  const updateTag = {name};
+  Tag
+    .findByIdAndUpdate(id, updateTag, {new: true})
+    .then(results => {
+      res.json(results);
+      next();
+    })
+    .catch(err => {
+      if(err.code === 11000) {
+        err = new Error('The tag name already exists');
+        err.status = 400;
+      }
+      next(err);
+    });
+});
+
+/* ========== DELETE/REMOVE A SINGLE ITEM ========== */
+router.delete('/:id', (req, res, next) => {
+  const { id } = req.params;
+  console.log(id);
+  if(!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The id entered is not a valid ID');
+    err.status = 400;
+    return next(err);
+  } 
+
+  const tagRemove = Tag.findByIdAndRemove(id);
+  const noteRemove = Note.updateMany(
+    { $pull: { tags: id } }    //add parameter for filter
+  );
+
+  Promise.all([tagRemove, noteRemove])
+    .then(() => {
+      res.sendStatus(204).end();
+    })
+    .catch(err => {
+      next(err);
+    });
+});
+
+module.exports = router;

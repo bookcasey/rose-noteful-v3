@@ -21,7 +21,7 @@ router.get('/', (req, res, next) => {
 
 /* ========== GET/READ ONE ITEM BY ID ========== */
 router.get('/:id', (req, res, next) => {
-  const {id} = req.params; 
+  const { id } = req.params; 
   if(!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error('The id entered is not a valid ID');
     err.status = 400;
@@ -73,20 +73,21 @@ router.put('/:id', (req, res, next) => {
   const {name} = req.body;
   
   if (!name) {
-    const message = 'Missing name in request body';
-    console.error(message);
-    return res.status(400).send(message);
+    const err = new Error('Missing name in request body');
+    err.status = 400;
+    return next(err);
   } 
   if(!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error('The id entered is not a valid ID');
     err.status = 400;
     return next(err);
   } 
-  const updateItem = {name};
+  const updateFolder = {name};
   Folder
-    .findByIdAndUpdate(id, updateItem, {new: true})
+    .findByIdAndUpdate(id, updateFolder, {new: true})
     .then(results => {
       res.json(results);
+      next();
     })
     .catch(err => {
       if(err.code === 11000) {
@@ -99,16 +100,35 @@ router.put('/:id', (req, res, next) => {
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
+  const { id } = req.params;
 
-  Folder
-    .findByIdAndRemove(req.params.id)
+  if(!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The id entered is not a valid ID');
+    err.status = 400;
+    return next(err);
+  } 
+  const folderRemove = Folder.findByIdAndRemove(id);
+  const noteRemove = Note.updateMany( 
+    { folderId: id }, { $unset: {folderId: '' } }
+  );
+
+  Promise.all([folderRemove, noteRemove])
     .then(() => {
-      res.sendStatus(204);
-    })
-    .catch(err => {
-      next(err);
+      res.status(204).end()
+        .catch(err => {
+          next(err);
+        });
     });
+
+  // Folder
+  //   .findByIdAndRemove(req.params.id)
+  //   .then(() => {
+  //     res.sendStatus(204);
+  //   })
+  //   .catch(err => {
+  //     next(err);
+  //   });
 });
 
 
-module.exports= router;
+module.exports = router;

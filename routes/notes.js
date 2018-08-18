@@ -15,9 +15,10 @@ router.get('/', (req, res, next) => {
   //to use query object need an endpoint like this: localhost:8080/api/notes?searchTerm=cats&&page=1
   //everything after ? is the query string
   //req.query = {searchTerm: cats}  is an object inside express 
-  const { searchTerm, folderId } = req.query; 
+  const { searchTerm, folderId, tagId } = req.query; 
 
   let filter = {};
+  console.log(req.query);
   // const filterArray = [];
 
   if (searchTerm) {
@@ -31,12 +32,18 @@ router.get('/', (req, res, next) => {
     // filterArray.push(folderId);
     // filter.$or = filterArray; //if searchTerm is in title or the content field = true  
   }
+
   if(folderId) {
     filter.folderId = folderId;
   }
 
+  if(tagId) {   //event listener refers to tagId 
+    filter.tags = tagId; 
+  }
+
   Note
     .find(filter)
+    .populate('tags')
     .sort({ updatedAt: 'desc' })
     .then(results => {
       if(results) {
@@ -71,7 +78,7 @@ router.get('/:id', (req, res, next) => {
     return next(err);
   }
   Note
-    .findById(id)
+    .findById(id).populate('tags')
     .then(result => {
       if(result) {
         res.json(result);
@@ -86,27 +93,34 @@ router.get('/:id', (req, res, next) => {
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
-  const { title, content, folderId } = req.body;
+  const { title, content, folderId, tags } = req.body;
 
   if (!title) {
     const err = new Error('Missing `title` in request body');
     err.status = 400;
     return next(err);
   }
+  const newNote = { title, content };
 
-  if (folderId) {
+  if (folderId) {  
     try { 
       mongoose.Types.ObjectId.isValid(folderId);
     } catch(err) {
       return next(err);
-    }
+    } 
+    newNote.folderId = folderId;
   }
-
-  const newNote = { title, content, folderId };
-  // const newItem = {
-  //   title: req.body.title,
-  //   content: req.body.content
-  // };
+  //add for loop to check each tags indexes valid 
+  if (tags) {  //verify each tag id is valid Object Id 
+    for (let i = 0; i < tags.length; i++) {
+      try {
+        mongoose.Types.ObjectId.isValid(tags);
+      } catch(err) {
+        return next(err);
+      }
+    } 
+    newNote.tags = tags;
+  }
     
   Note
     .create(newNote)
@@ -124,7 +138,7 @@ router.post('/', (req, res, next) => {
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
   const { id } = req.params;
-  const { title, content, folderId } = req.body;  
+  const { title, content, folderId, tags } = req.body;  
 
   //validate input
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -147,6 +161,13 @@ router.put('/:id', (req, res, next) => {
     }
   } 
 
+  if (tags) {  //verify each tag id is valid Object Id 
+    try {
+      mongoose.Types.ObjectId.isValid(tags);
+    } catch(err) {
+      return next(err);
+    }
+  } 
   const updateNote = { title, content, folderId };
 
   //Original beautiful solution by Burke
