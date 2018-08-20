@@ -8,8 +8,6 @@ const userSchema = new mongoose.Schema ({
   password: { type: String, required: true } 
 });  
 
-const User = mongoose.model('User', userSchema);
-
 userSchema.set('toObject', {
   virtuals: true,     // include built-in virtual `id`
   versionKey: false,  // remove `__v` version key
@@ -22,5 +20,7 @@ userSchema.set('toObject', {
 userSchema.methods.validatePassword = function (password) {
   return password === this.password;
 };
+
+const User = mongoose.model('User', userSchema);
 
 module.exports = User;
