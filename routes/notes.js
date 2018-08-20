@@ -57,14 +57,6 @@ router.get('/', (req, res, next) => {
     });
 });
  
-// console.log('Get All Notes');
-// res.json([
-//   { id: 1, title: 'Temp 1' },
-//   { id: 2, title: 'Temp 2' },
-//   { id: 3, title: 'Temp 3' }
-// ]);
-
-
 /* ========== GET/READ A SINGLE ITEM ========== */
 //path params. paramater inside the path, need : 
 //localhost:8080/api/notes/63278
@@ -110,7 +102,7 @@ router.post('/', (req, res, next) => {
     } 
     newNote.folderId = folderId;
   }
-  //add for loop to check each tags indexes valid 
+  //add for loop to check each tags index is valid 
   if (tags) {  //verify each tag id is valid Object Id 
     for (let i = 0; i < tags.length; i++) {
       try {

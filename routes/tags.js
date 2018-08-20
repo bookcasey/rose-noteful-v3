@@ -2,10 +2,11 @@
 
 const express = require('express');
 const mongoose = require('mongoose');
-const router = express.Router();
+
 const Tag = require('../models/tags');
 const Note = require('../models/note'); 
-const Folder = require('../models/folder'); //do I need this here?
+
+const router = express.Router();
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
@@ -24,15 +25,20 @@ router.get('/', (req, res, next) => {
 /* ========== GET/READ ONE ITEM BY ID ========== */
 router.get('/:id', (req, res, next) => {
   const { id } = req.params;
+
   if(!mongoose.Types.ObjectId.isValid(id)) {
-    const err = new Error('Id not found');
-    err.status = 404;
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
     return next(err);
   }
   Tag
     .findById(id)
-    .then(results => {
-      res.json(results);
+    .then(result => {
+      if(result) {
+        res.json(result);
+      } else {
+        next();
+      }
     })
     .catch(err => {
       next(err);
@@ -83,16 +89,19 @@ router.put('/:id', (req, res, next) => {
   }
 
   if(!mongoose.Types.ObjectId.isValid(id)) {
-    const err = new Error('The id entered is not a valid ID');
+    const err = new Error('The `id` is not valid');
     err.status = 400;
     return next(err);
   }
   const updateTag = {name};
   Tag
     .findByIdAndUpdate(id, updateTag, {new: true})
-    .then(results => {
-      res.json(results);
-      next();
+    .then(result => {
+      if(result) {
+        res.json(result);
+      } else {
+        next();
+      }
     })
     .catch(err => {
       if(err.code === 11000) {
@@ -106,7 +115,7 @@ router.put('/:id', (req, res, next) => {
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
   const { id } = req.params;
-  console.log(id);
+
   if(!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error('The id entered is not a valid ID');
     err.status = 400;
@@ -115,6 +124,7 @@ router.delete('/:id', (req, res, next) => {
 
   const tagRemove = Tag.findByIdAndRemove(id);
   const noteRemove = Note.updateMany(
+    { tags: id, },
     { $pull: { tags: id } }    //add parameter for filter
   );
 
